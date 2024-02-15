@@ -3,32 +3,6 @@ import time
 from adafruit_max7219 import matrices
 import globalVars
 
-L_EYE_OFF  = 0
-R_EYE_OFF  = 12
-L_NOSE_OFF = 6
-R_NOSE_OFF = 7
-L_MOUTH_OFF= 2
-R_MOUTH_OFF= 8
-
-order = ["leftEye", "leftMouth", "leftNose", "rightNose", "rightMouth", "rightEye"]
-
- 
-
-vFlipLEye = False
-hFlipLEye = False
-vFlipLMouth = True
-hFlipLMouth = True
-vFlipLNose = False
-hFlipLNose = False
-vFlipRNose = False
-hFlipRNose = False
-vFlipRMouth = True
-hFlipRMouth = True
-vFlipREye = False
-hFlipREye = False
-
-
-
 def getNumMats(mat):
     return  len(mat[0])
 
@@ -62,6 +36,7 @@ def smartUpdate(newMat):
                 globalVars.matDisplay.pixel(col,row, newMat[row][col])
                 globalVars.currentMatrixState[row][col] = newMat[row][col]
     globalVars.matDisplay.show()
+    
 
 def smartFill(onOff):
     for row in range(8):
@@ -74,36 +49,36 @@ def smartFill(onOff):
     #update current globalVars.matDisplay state
 
 class protoState:
-    def __init__(self, name, rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, animate=False, period=None, animFunc=None, flipSymetry=True):
+    def __init__(self, name, rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, period=None, animFunc=None, flipSymetry=True):
 
         self.name   = name
         self.flipSymetry = flipSymetry
         matricies = {
-            "rightMouth": matConv(rightMouth, vFlipRMouth, hFlipRMouth),
-            "rightEye": matConv(rightEye, vFlipREye, hFlipREye),
-            "rightNose": matConv(rightNose, vFlipRNose, hFlipRNose)}
+            "rightMouth": matConv(rightMouth, globalVars.vFlipRMouth, globalVars.hFlipRMouth),
+            "rightEye": matConv(rightEye, globalVars.vFlipREye, globalVars.hFlipREye),
+            "rightNose": matConv(rightNose, globalVars.vFlipRNose, globalVars.hFlipRNose)}
 
 
 
         if (leftMouth != None):
-            matricies.update({"leftMouth": matConv(leftMouth, vFlipLMouth, hFlipLMouth)})
+            matricies.update({"leftMouth": matConv(leftMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth)})
         else:
-            matricies.update({"leftMouth": flipSide(matConv(rightMouth, vFlipLMouth, hFlipLMouth), self.flipSymetry)})
+            matricies.update({"leftMouth": flipSide(matConv(rightMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth), self.flipSymetry)})
 
         if (leftEye != None):
-            matricies.update({"leftEye" : matConv(leftEye, vFlipLEye, hFlipLEye)})
+            matricies.update({"leftEye" : matConv(leftEye, globalVars.vFlipLEye, globalVars.hFlipLEye)})
         else:
-            matricies.update({"leftEye" : flipSide(matConv(rightEye, vFlipLEye, hFlipLEye), self.flipSymetry)})
+            matricies.update({"leftEye" : flipSide(matConv(rightEye, globalVars.vFlipLEye, globalVars.hFlipLEye), self.flipSymetry)})
 
         if (leftNose != None):
-            matricies.update({"leftNose" : matConv(leftNose, vFlipLNose, hFlipLNose)})
+            matricies.update({"leftNose" : matConv(leftNose, globalVars.vFlipLNose, globalVars.hFlipLNose)})
         else:
-            matricies.update({"leftNose" : flipSide(matConv(rightNose, vFlipLNose, hFlipLNose), self.flipSymetry)})
+            matricies.update({"leftNose" : flipSide(matConv(rightNose, globalVars.vFlipLNose, globalVars.hFlipLNose), self.flipSymetry)})
 
         # order dicrionary based on the configuration
 
         sortedMats = []
-        for i in order:
+        for i in globalVars.matOrder:
             sortedMats.append(matricies[i])
         self.fullDefaultMat = []
         for row in range(8):
@@ -112,12 +87,7 @@ class protoState:
             for row in range(8):
                 self.fullDefaultMat[row]+=i[row]
 
-        self.animate = animate
-
-        if (animate == True):
-            self.period = period
-        else:
-            self.period = None
+        self.period = period
 
         self.animFunc = animFunc
         self.nextRun = -1 if (self.period == None) else time.monotonic()+self.period
@@ -127,6 +97,14 @@ class protoState:
         # we need to make sure we tell the global current globalVars.matDisplay of this update
         smartFill(False)
         smartUpdate(self.fullDefaultMat)
+    
+    def doAnimation(self):
+        if self.period == None or self.animFunc == None or time.monotonic() < self.nextRun:
+            return
+        else:
+            self.animFunc()
+            self.nextRun += self.period
+
 
 
 

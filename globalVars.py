@@ -25,6 +25,7 @@ def init(spi, cs):
     global hFlipRMouth
     global vFlipREye
     global hFlipREye
+    global currentProtoState
     vFlipLEye   = False
     hFlipLEye   = False
     vFlipLMouth = True
@@ -37,6 +38,7 @@ def init(spi, cs):
     hFlipRMouth = True
     vFlipREye   = False
     hFlipREye   = False
+    currentProtoState = None
     sizeIndex = 0
     orderIndex = 1
     offsetIndex = 2

@@ -29,6 +29,38 @@ def matConv(inmat, vflip, hflip):
             row.reverse()
     return retmat
 
+def createFullMat(rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, flipSymetry=True):
+
+    outMat = []
+    matricies = {
+            "rightMouth": matConv(rightMouth, globalVars.vFlipRMouth, globalVars.hFlipRMouth),
+            "rightEye": matConv(rightEye, globalVars.vFlipREye, globalVars.hFlipREye),
+            "rightNose": matConv(rightNose, globalVars.vFlipRNose, globalVars.hFlipRNose)}
+
+    if (leftMouth != None):
+        matricies.update({"leftMouth": matConv(leftMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth)})
+    else:
+        matricies.update({"leftMouth": flipSide(matConv(rightMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth), flipSymetry)})
+    if (leftEye != None):
+        matricies.update({"leftEye" : matConv(leftEye, globalVars.vFlipLEye, globalVars.hFlipLEye)})
+    else:
+        matricies.update({"leftEye" : flipSide(matConv(rightEye, globalVars.vFlipLEye, globalVars.hFlipLEye), flipSymetry)})
+    if (leftNose != None):
+        matricies.update({"leftNose" : matConv(leftNose, globalVars.vFlipLNose, globalVars.hFlipLNose)})
+    else:
+        matricies.update({"leftNose" : flipSide(matConv(rightNose, globalVars.vFlipLNose, globalVars.hFlipLNose), flipSymetry)})
+
+    sortedMats = []
+    for i in globalVars.matOrder:
+        sortedMats.append(matricies[i])
+    
+    for row in range(8):
+        outMat.append([])
+    for i in sortedMats:
+        for row in range(8):
+            outMat[row]+=i[row]
+    return outMat
+
 def smartUpdate(newMat):
     for row in range(8):
         for col in range(14*8):
@@ -49,50 +81,21 @@ def smartFill(onOff):
     #update current globalVars.matDisplay state
 
 class protoState:
-    def __init__(self, name, rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, period=None, animFunc=None, flipSymetry=True):
+    def __init__(self, name, rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, period=None, flipSymetry=True, animFunc=None, animDelay=None, animData=None):
 
         self.name   = name
         self.flipSymetry = flipSymetry
-        matricies = {
-            "rightMouth": matConv(rightMouth, globalVars.vFlipRMouth, globalVars.hFlipRMouth),
-            "rightEye": matConv(rightEye, globalVars.vFlipREye, globalVars.hFlipREye),
-            "rightNose": matConv(rightNose, globalVars.vFlipRNose, globalVars.hFlipRNose)}
-
-
-
-        if (leftMouth != None):
-            matricies.update({"leftMouth": matConv(leftMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth)})
-        else:
-            matricies.update({"leftMouth": flipSide(matConv(rightMouth, globalVars.vFlipLMouth, globalVars.hFlipLMouth), self.flipSymetry)})
-
-        if (leftEye != None):
-            matricies.update({"leftEye" : matConv(leftEye, globalVars.vFlipLEye, globalVars.hFlipLEye)})
-        else:
-            matricies.update({"leftEye" : flipSide(matConv(rightEye, globalVars.vFlipLEye, globalVars.hFlipLEye), self.flipSymetry)})
-
-        if (leftNose != None):
-            matricies.update({"leftNose" : matConv(leftNose, globalVars.vFlipLNose, globalVars.hFlipLNose)})
-        else:
-            matricies.update({"leftNose" : flipSide(matConv(rightNose, globalVars.vFlipLNose, globalVars.hFlipLNose), self.flipSymetry)})
-
-        # order dicrionary based on the configuration
-
-        sortedMats = []
-        for i in globalVars.matOrder:
-            sortedMats.append(matricies[i])
-        self.fullDefaultMat = []
-        for row in range(8):
-            self.fullDefaultMat.append([])
-        for i in sortedMats:
-            for row in range(8):
-                self.fullDefaultMat[row]+=i[row]
-
-        self.period = period
+        self.fullDefaultMat = createFullMat(rightMouth, rightEye, rightNose, leftMouth, leftEye, leftNose, flipSymetry)
 
         self.animFunc = animFunc
+        self.period = period
         self.nextRun = -1 if (self.period == None) else time.monotonic()+self.period
+        self.animData = animData
+        self.animIndex = 0
+        self.animDelay = animDelay
 
     def enterState(self):
+        globalVars.currentProtoState = self
         self.nextRun = -1 if (self.period == None) else time.monotonic()+self.period
         # we need to make sure we tell the global current globalVars.matDisplay of this update
         smartFill(False)
@@ -102,7 +105,7 @@ class protoState:
         if self.period == None or self.animFunc == None or time.monotonic() < self.nextRun:
             return
         else:
-            self.animFunc()
+            self.animFunc(delay=self.animDelay, animData=self.animData, animIndex=self.animIndex)
             self.nextRun += self.period
 
 

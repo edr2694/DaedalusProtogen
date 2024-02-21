@@ -6,7 +6,7 @@ from adafruit_max7219 import matrices
 from sprites import *
 import globalVars
 
-def blink():
+def blink(delay=None, animData=None, animIndex=None):
     originalMat = [x[:] for x in globalVars.currentMatrixState]
     left  = globalVars.matInfo["leftEye"]
     right = globalVars.matInfo["rightEye"]
@@ -20,4 +20,18 @@ def blink():
         for j in range(right[globalVars.sizeIndex]*8):
             nextMat[rightRange[i]][(right[globalVars.offsetIndex]+j)] = 0
         smartUpdate(nextMat)
+        if (delay != None):
+            time.sleep(delay)
     smartUpdate(originalMat)
+
+def cycleFrames(delay=None, animData=None, animIndex=None):
+    # NOTE: requires a animData to be a list of frames that have been 
+    # initialized using createFullMat(). This is required so that we
+    # don't need to recalculate the full matricies every single time
+    # the animation function is called
+    smartUpdate(animData[globalVars.currentProtoState.animIndex])
+    if (delay != None):
+        time.sleep(delay)
+    globalVars.currentProtoState.animIndex += 1
+    if (globalVars.currentProtoState.animIndex >= len(animData)):
+        globalVars.currentProtoState.animIndex = 0

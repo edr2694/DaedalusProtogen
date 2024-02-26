@@ -11,6 +11,8 @@ from collections import OrderedDict
 from protogen import *
 import config
 import animations
+import asyncio
+import keypad
 
 
 config.init()
@@ -24,9 +26,9 @@ angryFrameList = [createFullMat(angryMouth1, angryEye, regularNose),
                   createFullMat(angryMouth3, angryEye, regularNose)]
 
 happyState = protogenMood("happy", happyMouth, happyEye, regularNose, period=5, animFunc=animations.blink)
-spookedState = protogenMood("spooked", spookedMouth, spookedEye, regularNose)
+spookedState = protogenMood("spooked", spookedMouth, spookedEye, regularNose, period=3, animFunc=animations.blink)
 angryState = protogenMood("angry", angryMouth1, angryEye, regularNose, period=.05, animFunc=animations.cycleFrames, animData=angryFrameList)
-errorState = protogenMood("error", errorMouth, errorEye, errorNose, flipSymetry=False)
+errorState = protogenMood("error", errorMouth, errorEye, errorNose, flipSymetry=False, period=.25, animFunc=animations.flashEyes)
 testPat    = protogenMood("test", TestPatMouth, TestPatEyes, regularNose, flipSymetry=False)
 
 
@@ -38,18 +40,6 @@ states.update({angryState.name: angryState})
 states.update({errorState.name: errorState})
 states.update({testPat.name: testPat})
 
+
 proto = protogen(states)
-
-smartFill(proto, True)
-time.sleep(0.5)
-smartFill(proto, False)
-happyState.enterMood()
-
-while True:
-    if (time.monotonic() > proto.currentMood.nextRun):
-        proto.currentMood.doAnimation()
-    time.sleep(.05)
-    #for state in states:
-    #    print(str(state))
-    #    states[state].enterState()
-    #    time.sleep(5)
+asyncio.run(proto.beginLoop())

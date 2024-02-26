@@ -5,6 +5,8 @@ import board
 import digitalio
 from adafruit_max7219 import matrices
 from collections import OrderedDict
+import asyncio
+import keypad
 
 def getNumMats(mat):
     return  len(mat[0])
@@ -82,6 +84,23 @@ def smartFill(protogen, onOff):
                 protogen.currentDisplayed[row][col] = checkval
     protogen.display.show()
 
+async def buttonCheck(protogen):
+    with keypad.Keys(
+        (config.moodButtonPin, board.D6), value_when_pressed=False, pull=True) as buttons:
+        while True:
+            buttonsEvent = buttons.events.get()
+            if buttonsEvent and buttonsEvent.pressed:
+                buttonNumber = buttonsEvent.key_number
+                if buttonNumber == 0:
+                    protogen.gotoNextMood()
+            await asyncio.sleep(0)
+
+async def animationCheck(protogen):
+    while True:
+        if ((time.monotonic() > protogen.currentMood.nextRun) and (protogen.currentMood.animFunc != None)):
+            protogen.currentMood.doAnimation()
+            print("in animCheck")
+        await asyncio.sleep(.1)
 
 class protogen:
     def __init__(self, moods):
@@ -90,8 +109,9 @@ class protogen:
             mood.protogen = self
         spi = board.SPI()
         cs = digitalio.DigitalInOut(board.D4)
-        self.currentDisplayed = [[0 for col in range(14*8)] for row in range(8)]
         self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
+        self.asyncList = []
+        self.currentDisplayed = [[0 for col in range(14*8)] for row in range(8)]
         self.matInfo = {"leftEye": {"numPanels": 2, "offset": -1},
                         "leftMouth": {"numPanels": 4, "offset": -1},
                         "leftNose": {"numPanels": 1, "offset": -1},
@@ -103,8 +123,12 @@ class protogen:
         for mat in config.matOrder[1:]:
             self.matInfo[mat]["offset"] = runningSum
             runningSum += self.matInfo[mat]["numPanels"]*8
-        self.currentMood = self.moods[next(iter(self.moods.keys()))]
-        self.currentMood.enterMood()
+        self.currentMood = None
+        # before we enter the first state, flash the display to indicate reboot
+        smartFill(self, True)
+        time.sleep(.5)
+        smartFill(self, False)
+        self.moods[next(iter(self.moods.keys()))].enterMood()
     
     def gotoNextMood(self):
         l = list(self.moods.keys())
@@ -113,3 +137,12 @@ class protogen:
             self.moods[l[i+1]].enterMood()
         else:
             self.moods[next(iter(self.moods.keys()))].enterMood()
+    
+    async def beginLoop(self):
+        animTask = asyncio.create_task(animationCheck(self))
+        self.asyncList.append(animTask)
+        if (config.moodSwitchOnButtonPress):
+            buttonTask = asyncio.create_task(buttonCheck(self))
+            self.asyncList.append(buttonTask)
+        results = await asyncio.gather(*self.asyncList)
+

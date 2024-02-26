@@ -12,8 +12,8 @@ def blink(mood, delay=None, animData=None, animIndex=None):
     left  = mood.protogen.matInfo["leftEye"]
     right = mood.protogen.matInfo["rightEye"]
     depth = 6 
-    leftRange = list(range(depth)) if (config.vFlipLEye == False) else list(range(15, 15-depth, -1))
-    rightRange = list(range(depth)) if (config.vFlipREye == False) else list(range(15, 15-depth, -1))
+    leftRange = list(range(depth)) if (config.vFlipLEye == False) else list(range(7, 7-depth, -1))
+    rightRange = list(range(depth)) if (config.vFlipREye == False) else list(range(7, 7-depth, -1))
     for i in range(depth):
         nextMat = [x[:] for x in mood.protogen.currentDisplayed]
         for j in range(left["numPanels"]*8):
@@ -36,3 +36,20 @@ def cycleFrames(mood, delay=None, animData=None, animIndex=None):
     mood.animIndex += 1
     if (mood.animIndex >= len(animData)):
         mood.animIndex = 0
+
+def flashEyes(mood, delay=None, animData=None, animIndex=None):
+    if (animData == None):
+        mood.animData = 0
+    if (animData == 1):
+        mood.animData = 0
+    else:
+        mood.animData = 1
+    left  = mood.protogen.matInfo["leftEye"]
+    right = mood.protogen.matInfo["rightEye"]
+    nextMat = [x[:] for x in mood.fullDefaultMat]
+    for i in range(8):
+        for j in range(left["numPanels"]*8): #columns
+            nextMat[i][(left["offset"]+j)] = (0 if (mood.animData == 0) else mood.fullDefaultMat[i][(left["offset"]+j)])
+            nextMat[i][(right["offset"]+j)] = (0 if (mood.animData == 0) else mood.fullDefaultMat[i][(right["offset"]+j)])
+    smartUpdate(mood.protogen, nextMat)
+

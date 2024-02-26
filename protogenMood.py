@@ -27,8 +27,5 @@ class protogenMood:
         self.protogen.currentMood = self
     
     def doAnimation(self):
-        if self.period == None or self.animFunc == None or time.monotonic() < self.nextRun:
-            return
-        else:
             self.animFunc(self, delay=self.animDelay, animData=self.animData, animIndex=self.animIndex)
             self.nextRun += self.period

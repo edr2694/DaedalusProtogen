@@ -99,7 +99,6 @@ async def animationCheck(protogen):
     while True:
         if ((time.monotonic() > protogen.currentMood.nextRun) and (protogen.currentMood.animFunc != None)):
             protogen.currentMood.doAnimation()
-            print("in animCheck")
         await asyncio.sleep(.1)
 
 class protogen:

@@ -16,6 +16,14 @@ def init():
     global hFlipRMouth
     global vFlipREye
     global hFlipREye
+    global rgbStripEnable
+    global rgbStripPin
+    global numRGBLEDs
+    global maxRGBBrightness
+    global rgbStripAnimationRate
+    global rgbStripAnimation
+    global rgbStripSolidColor
+
 
     # hardware configuration
 
@@ -44,3 +52,20 @@ def init():
     hFlipRMouth = True
     vFlipREye   = False
     hFlipREye   = False
+
+    # optional RGB Strip
+
+    # Set to true to enable 
+    rgbStripEnable = False # <True or False>
+    # Pin that the data line for the RGB strip is connected to
+    rgbStripPin = board.D6
+    # Number of LED's on the strip <integer>
+    numRGBLEDs = 25
+    # Maximum brightness for the RGB strip <number between 0.0 and 1.0>
+    maxRGBBrightness = .3
+    # "Animation" to run on the strip <"solid", "breathe", "rainbowCycle", "wheel">
+    rgbStripAnimation = "rainbowCyle"
+    # Rate for the RGB strip animation <number of seconds the animation should take to cycle>
+    rgbStripAnimationRate = 20
+    # Solid color for RGB Strip (required if solid or breathing animation) <(<redValue0-255>, <greenValue0-255>, <blueValue0-255>)>
+    rgbStripSolidColor = (128,128,128)

@@ -6,6 +6,7 @@ from protogen import *
 from adafruit_max7219 import matrices
 from sprites import *
 import config
+import neopixel
 
 def blink(mood, delay=None, animData=None, animIndex=None):
     originalMat = [x[:] for x in mood.protogen.currentDisplayed]
@@ -53,3 +54,24 @@ def flashEyes(mood, delay=None, animData=None, animIndex=None):
             nextMat[i][(right["offset"]+j)] = (0 if (mood.animData == 0) else mood.fullDefaultMat[i][(right["offset"]+j)])
     smartUpdate(mood.protogen, nextMat)
 
+def rgbHelper(pos):
+    # Input a value 0 to 255 to get a color value.
+    # Input a value 0 to 255 to get a color value.
+    # The colors are a transition r - g - b - back to r.
+    if pos < 0 or pos > 255:
+        return (0, 0, 0)
+    if pos < 85:
+        return (255 - pos * 3, pos * 3, 0)
+    elif pos < 170:
+        pos -= 85
+        return (0, 255 - pos * 3, pos * 3)
+    else:
+        pos -= 170
+        return (pos * 3, 0, 255 - pos * 3)
+
+def rgbRainbowCycle(pixels):
+    for j in range(255):
+        for i in range(len(pixels)):
+            idx = int((i * 256 / len(pixels)) + j)
+            pixels[i] = rgbHelper(idx & 255)
+        pixels.show()

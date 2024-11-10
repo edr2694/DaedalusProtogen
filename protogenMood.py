@@ -19,6 +19,7 @@ class protogenMood:
         self.animIndex = 0
         self.animDelay = animDelay
         self.protogen = None
+        
 
     def enterMood(self):
         self.nextRun = -1 if (self.period == None) else time.monotonic()+self.period

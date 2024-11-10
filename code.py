@@ -21,15 +21,16 @@ config.init()
 
 # set up frame array for angry
 
+
 angryFrameList = [createFullMat(angryMouth1, angryEye, regularNose),
                   createFullMat(angryMouth2, angryEye, regularNose),
                   createFullMat(angryMouth3, angryEye, regularNose)]
 
 happyState = protogenMood("happy", happyMouth, happyEye, regularNose, period=5, animFunc=animations.blink)
 spookedState = protogenMood("spooked", spookedMouth, spookedEye, regularNose, period=3, animFunc=animations.blink)
-angryState = protogenMood("angry", angryMouth1, angryEye, regularNose, period=.05, animFunc=animations.cycleFrames, animData=angryFrameList)
+angryState = protogenMood("angry", angryMouth1, angryEye, regularNose, period=.1, animFunc=animations.cycleFrames, animData=angryFrameList)
 errorState = protogenMood("error", errorMouth, errorEye, errorNose, flipSymetry=False, period=.25, animFunc=animations.flashEyes)
-testPat    = protogenMood("test", TestPatMouth, TestPatEyes, regularNose, flipSymetry=False)
+#testPat    = protogenMood("test", TestPatMouth, TestPatEyes, regularNose, flipSymetry=False)
 
 
 
@@ -38,7 +39,8 @@ states.update({happyState.name: happyState})
 states.update({spookedState.name: spookedState})
 states.update({angryState.name: angryState})
 states.update({errorState.name: errorState})
-states.update({testPat.name: testPat})
+#states.update({testPat.name: testPat})
+
 
 
 proto = protogen(states)

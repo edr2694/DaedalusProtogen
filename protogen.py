@@ -150,6 +150,14 @@ async def oledUpdate(protogen):
         protogen.oled.show()
         await asyncio.sleep(.5)
 
+async def micCheck(protogen):
+    while True:
+        protogen.micVal = protogen.microphone.value
+        if (config.talkAnimationOnMicrophone):
+            # TBD
+            continue
+        await asyncio.sleep(.1)
+
 def rgbHelper(pos):
     # Input a value 0 to 255 to get a color value.
     # Input a value 0 to 255 to get a color value.
@@ -211,6 +219,9 @@ class protogen:
         if (config.oledScreenEnable):
             i2c = busio.I2C(board.SCL, board.SDA)
             self.oled = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
+        if (config.microphoneEnable):
+            self.microphone = analogio.AnalogIn(config.microphonePin)
+            self.micVal = 0 # initial value
         self.displayedStateNum = 1
         self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
         self.voltageSource = analogio.AnalogIn(config.battSensePin)
@@ -278,6 +289,9 @@ class protogen:
         if(config.oledScreenEnable):
             oledTask = asyncio.create_task(oledUpdate(self))
             self.asyncList.append(oledTask)
+        if(config.microphoneEnable):
+            microphoneTask = asyncio.create_task(micCheck(self))
+            self.asyncList.append(microphoneTask)
         results = await asyncio.gather(*self.asyncList)
 
 

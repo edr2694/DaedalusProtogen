@@ -31,6 +31,9 @@ def init():
     global rgbStripPin
     global buttonEnable
     global hallEffectEnable
+    global microphonePin
+    global microphoneEnable
+    global talkAnimationOnMicrophone
 
 
     # hardware configuration
@@ -64,6 +67,13 @@ def init():
 
     # Order of the matrix groups. Rearrange them in the order that they are wired
     matOrder = ["leftEye", "leftMouth", "leftNose", "rightNose", "rightMouth", "rightEye"]
+
+    # Specify the pin for a microphone
+    microphonePin = board.A0
+    # enable the microphone in general
+    microphoneEnable = True # <True or False>
+    # do a talk animation when enabled
+    talkAnimationOnMicrophone = True # <True or False>
 
     # horizontal/vertical flip control. Change these if the orientation needs to be changed
     # <True or False> for all of the following:

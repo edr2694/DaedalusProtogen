@@ -24,7 +24,13 @@ def init():
     global rgbStripAnimationRate
     global rgbStripAnimation
     global rgbStripSolidColor
+    global stateLedEnable
     global stateLedPins
+    global oledScreenEnable
+    global battSensePin
+    global rgbStripPin
+    global buttonEnable
+    global hallEffectEnable
 
 
     # hardware configuration
@@ -33,7 +39,11 @@ def init():
     moodSwitchOnButtonPress = False # <True or False>
     # set the following to True if you wish to use a hall effect sensor
     moodSwitchOnHallEffect = True # True or False
-    # Pin the one of the leads on the button above is connected to (the other is connected to gnd)
+    # Set the following to true if you want to have a button to switch moods
+    buttonEnable = True # True or False
+    # Set the following to true if you want to have a hall effect sensor and magnet to switch moods
+    hallEffectEnable = True
+    # Pin that one of the leads on the button above is connected to (the other is connected to gnd)
     # ignored if moodSwitchOnButtonPress is False
     moodButtonPin = board.D5 # <board.<pin identifier>> ie board.D5
     # Pin the sense pin of the hall effect sensor is connected to
@@ -43,7 +53,14 @@ def init():
     moodSwitchRemoteEnable = False # <True or False>
 
     # optional 3 led's to display state number
-    stateLedPins = [board.D12, board.D11, board.D10] 
+    stateLedPins = [board.D12, board.D11, board.D10]
+    # Set to True if using the LED's to show state number, otherwise set to False
+    stateLedEnable = True # <True or False>
+
+    # optional enable SSD1306 OLED screen, hooked up to the SCL and SDA pins on the RP2040
+    oledScreenEnable = False
+    # if screen is enabled, you'll want to hook up a resistor network to the following pin to read the voltage
+    battSensePin = board.A3
 
     # Order of the matrix groups. Rearrange them in the order that they are wired
     matOrder = ["leftEye", "leftMouth", "leftNose", "rightNose", "rightMouth", "rightEye"]
@@ -67,6 +84,8 @@ def init():
 
     # Set to true to enable 
     rgbStripEnable = True # <True or False>
+    #Set to pin used for RGB strip control
+    rgbStripPin = board.D9
     # Number of LED's on the strip <integer>
     numRGBLEDs = 50
     # Maximum brightness for the RGB strip <number between 0.0 and 1.0>

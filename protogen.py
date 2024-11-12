@@ -9,6 +9,9 @@ from collections import OrderedDict
 import asyncio
 import keypad
 import neopixel
+import adafruit_ssd1306
+import busio
+import displayio
 
 def getNumMats(mat):
     return  len(mat[0])
@@ -95,15 +98,20 @@ async def buttonCheck(protogen):
             if buttonsEvent and buttonsEvent.pressed:
                 buttonNumber = buttonsEvent.key_number
                 if buttonNumber == 0:
-                    protogen.gotoNextMood()
+                    if config.moodSwitchOnButtonPress:
+                        protogen.gotoNextMood()
+                    # else :
+                        # add more code here for more button effects
             await asyncio.sleep(0)
 
 async def hallCheck(protogen):
-    protogen.magSense = analogio.AnalogIn(board.A1)
     while True:
         inval = protogen.magSense.value
         if (inval >= 35000 or inval <= 30000):
-            protogen.gotoNextMood()
+            if (config.moodSwitchOnHallEffect):
+                protogen.gotoNextMood()
+            # else:
+                # add additional code here for more hall effect effects
         await asyncio.sleep(.1)
 
 async def animationCheck(protogen):
@@ -116,6 +124,31 @@ async def rgbCheck(protogen):
     while True:
         rgbRainbowCycle(protogen)
         await asyncio.sleep(0)
+
+async def voltageUpdate(protogen):
+    while True:
+        protogen.voltage = protogen.magSense.value / 65535 * 3.3 * 2
+        await asyncio.sleep(5)
+        # update every 5 seconds, no need to do it more often
+
+async def oledUpdate(protogen):
+    while True:
+        protogen.oled.fill(0)
+        protogen.oled.text("Battery: ", 0, 1, 1) # next line will be at y=11. volts/% at x = 9*5 + 1 = 46
+        if (protogen.voltage < 3.5): # we need more than 3.3 to actually run the controller, so if we get this low, alert
+            hilight = 1
+            text = 0
+        else:
+            hilight = 0
+            text = 1
+        for x in range(46, 9*5+3+46):
+            for y in range(0, 10):
+                protogen.oled.pixel(x,y, hilight)
+        protogen.oled.text(str(protogen.voltage), 46, 1, text)
+        protogen.oled.text("State: ", 0, 11, 1)
+        protogen.oled.text(protogen.currentMood.name, 7*5+1, 1, 1)
+        protogen.oled.show()
+        await asyncio.sleep(.5)
 
 def rgbHelper(pos):
     # Input a value 0 to 255 to get a color value.
@@ -153,6 +186,9 @@ def rgbColorShift(pixels): #shift all pixels at once for hopefully better perfor
     pixels.fill((rgbVals[0], rgbVals[1], rgbVals[2]))
     pixels.show()
 
+
+
+
 class protogen:
     def __init__(self, moods):
         self.moods = moods
@@ -160,17 +196,25 @@ class protogen:
             mood.protogen = self
         spi = board.SPI()
         cs = digitalio.DigitalInOut(board.D24)
-        self.onesLed = digitalio.DigitalInOut(config.stateLedPins[0])
-        self.onesLed.direction = digitalio.Direction.OUTPUT
-        self.onesLed.value = True
-        self.twosLed = digitalio.DigitalInOut(config.stateLedPins[1])
-        self.twosLed.direction = digitalio.Direction.OUTPUT
-        self.twosLed.value = True
-        self.foursLed = digitalio.DigitalInOut(config.stateLedPins[2])
-        self.foursLed.direction = digitalio.Direction.OUTPUT
-        self.foursLed.value = True
+        if (config.moodSwitchOnHallEffect):
+            protogen.magSense = analogio.AnalogIn(config.hallEffectPin)
+        if (config.stateLedEnable):
+            self.onesLed = digitalio.DigitalInOut(config.stateLedPins[0])
+            self.onesLed.direction = digitalio.Direction.OUTPUT
+            self.onesLed.value = True
+            self.twosLed = digitalio.DigitalInOut(config.stateLedPins[1])
+            self.twosLed.direction = digitalio.Direction.OUTPUT
+            self.twosLed.value = True
+            self.foursLed = digitalio.DigitalInOut(config.stateLedPins[2])
+            self.foursLed.direction = digitalio.Direction.OUTPUT
+            self.foursLed.value = True
+        if (config.oledScreenEnable):
+            i2c = busio.I2C(board.SCL, board.SDA)
+            self.oled = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
         self.displayedStateNum = 1
         self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
+        self.voltageSource = analogio.AnalogIn(config.battSensePin)
+        self.voltage = self.voltageSource.value / 65535 * 3.3 * 2
         self.asyncList = []
         self.currentDisplayed = [[0 for col in range(14*8)] for row in range(8)]
         self.matInfo = {"leftEye": {"numPanels": 2, "offset": -1},
@@ -189,18 +233,20 @@ class protogen:
         smartFill(self, True)
         time.sleep(.5)
         smartFill(self, False)
-        self.twosLed.value = False
-        self.foursLed.value = False
+        if (config.stateLedEnable):
+            self.twosLed.value = False
+            self.foursLed.value = False
         self.moods[next(iter(self.moods.keys()))].enterMood()
         if (config.rgbStripEnable):
-            self.rgbLights = neopixel.NeoPixel(board.EXTERNAL_NEOPIXELS, config.numRGBLEDs, auto_write=False)
+            self.rgbLights = neopixel.NeoPixel(config.rgbStripPin, config.numRGBLEDs, auto_write=False)
             self.rgbLights.brightness = config.maxRGBBrightness
             self.rgbLastRun = time.monotonic()
             self.rgbIndex = 0
             external_power = digitalio.DigitalInOut(board.EXTERNAL_POWER)
             external_power.direction = digitalio.Direction.OUTPUT
             external_power.value = True
-    
+
+
     def gotoNextMood(self):
         l = list(self.moods.keys())
         i = l.index(self.currentMood.name)
@@ -210,22 +256,28 @@ class protogen:
         else:
             self.moods[next(iter(self.moods.keys()))].enterMood()
             self.displayedStateNum = 1
-        self.onesLed.value = self.displayedStateNum & 0b1
-        self.twosLed.value = self.displayedStateNum & 0b10
-        self.foursLed.value = self.displayedStateNum & 0b100
+        if (config.stateLedEnable):
+            self.onesLed.value = self.displayedStateNum & 0b1
+            self.twosLed.value = self.displayedStateNum & 0b10
+            self.foursLed.value = self.displayedStateNum & 0b100
     
     async def beginLoop(self):
         animTask = asyncio.create_task(animationCheck(self))
         self.asyncList.append(animTask)
-        if (config.moodSwitchOnHallEffect):
+        voltageTask = asyncio.create_task(voltageUpdate(self))
+        self.asyncList.append(voltageTask)
+        if (config.hallEffectEnable):
             hallTask = asyncio.create_task(hallCheck(self))
             self.asyncList.append(hallTask)
-        if (config.moodSwitchOnButtonPress):
+        if (config.buttonEnable):
             buttonTask = asyncio.create_task(buttonCheck(self))
             self.asyncList.append(buttonTask)
         if(config.rgbStripEnable):
             rgbTask = asyncio.create_task(rgbCheck(self))
             self.asyncList.append(rgbTask)
+        if(config.oledScreenEnable):
+            oledTask = asyncio.create_task(oledUpdate(self))
+            self.asyncList.append(oledTask)
         results = await asyncio.gather(*self.asyncList)
 
 

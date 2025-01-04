@@ -153,9 +153,8 @@ async def oledUpdate(protogen):
 async def micCheck(protogen):
     while True:
         protogen.micVal = protogen.microphone.value
-        if (config.talkAnimationOnMicrophone):
+        #if (config.talkAnimationOnMicrophone):
             # TBD
-            continue
         await asyncio.sleep(.1)
 
 def rgbHelper(pos):

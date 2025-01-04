@@ -30,16 +30,17 @@ happyState = protogenMood("happy", happyMouth, happyEye, regularNose, period=5, 
 spookedState = protogenMood("spooked", spookedMouth, spookedEye, regularNose, period=3, animFunc=animations.blink)
 angryState = protogenMood("angry", angryMouth1, angryEye, regularNose, period=.1, animFunc=animations.cycleFrames, animData=angryFrameList)
 errorState = protogenMood("error", errorMouth, errorEye, errorNose, flipSymetry=False, period=.25, animFunc=animations.flashEyes)
-#testPat    = protogenMood("test", TestPatMouth, TestPatEyes, regularNose, flipSymetry=False)
+#testPat    = protogenMood("test", rightMouth=TestPatMouthR, leftMouth=TestPatMouthL, rightEye=TestPatEyesR, leftEye=TestPatEyesL, leftNose=TestPatNoseL, rightNose=TestPatNoseR, flipSymetry=False)
 
 
 
 states = OrderedDict()
+#states.update({testPat.name: testPat})
 states.update({happyState.name: happyState})
 states.update({spookedState.name: spookedState})
 states.update({angryState.name: angryState})
 states.update({errorState.name: errorState})
-#states.update({testPat.name: testPat})
+
 
 
 

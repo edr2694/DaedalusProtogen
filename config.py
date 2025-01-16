@@ -43,7 +43,7 @@ def init():
     # set the following to True if you wish to use a hall effect sensor
     moodSwitchOnHallEffect = True # True or False
     # Set the following to true if you want to have a button to switch moods
-    buttonEnable = True # True or False
+    buttonEnable = False # True or False
     # Set the following to true if you want to have a hall effect sensor and magnet to switch moods
     hallEffectEnable = True
     # Pin that one of the leads on the button above is connected to (the other is connected to gnd)
@@ -58,10 +58,10 @@ def init():
     # optional 3 led's to display state number
     stateLedPins = [board.D12, board.D11, board.D10]
     # Set to True if using the LED's to show state number, otherwise set to False
-    stateLedEnable = True # <True or False>
+    stateLedEnable = False # <True or False>
 
     # optional enable SSD1306 OLED screen, hooked up to the SCL and SDA pins on the RP2040
-    oledScreenEnable = False
+    oledScreenEnable = True
     # if screen is enabled, you'll want to hook up a resistor network to the following pin to read the voltage
     battSensePin = board.A3
 
@@ -71,24 +71,24 @@ def init():
     # Specify the pin for a microphone
     microphonePin = board.A0
     # enable the microphone in general
-    microphoneEnable = True # <True or False>
+    microphoneEnable = False # <True or False>
     # do a talk animation when enabled
-    talkAnimationOnMicrophone = True # <True or False>
+    talkAnimationOnMicrophone = False # <True or False>
 
     # horizontal/vertical flip control. Change these if the orientation needs to be changed
     # <True or False> for all of the following:
-    vFlipLEye   = False
-    hFlipLEye   = False
+    vFlipLEye   = True
+    hFlipLEye   = True
     vFlipLMouth = True
     hFlipLMouth = True
-    vFlipLNose  = False
-    hFlipLNose  = False
-    vFlipRNose  = False
-    hFlipRNose  = False
+    vFlipLNose  = True
+    hFlipLNose  = True
+    vFlipRNose  = True
+    hFlipRNose  = True
     vFlipRMouth = True
     hFlipRMouth = True
-    vFlipREye   = False
-    hFlipREye   = False
+    vFlipREye   = True
+    hFlipREye   = True
     
     # optional RGB Strip
 

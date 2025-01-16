@@ -127,35 +127,39 @@ async def rgbCheck(protogen):
 
 async def voltageUpdate(protogen):
     while True:
-        protogen.voltage = protogen.magSense.value / 65535 * 3.3 * 2
+        protogen.voltage = protogen.voltageSource.value / 65535 * 3.3 * 2
         await asyncio.sleep(5)
         # update every 5 seconds, no need to do it more often
 
 async def oledUpdate(protogen):
+    oldVolt = 0
+    oldMood = "nope"
     while True:
-        protogen.oled.fill(0)
-        protogen.oled.text("Battery: ", 0, 1, 1) # next line will be at y=11. volts/% at x = 9*5 + 1 = 46
-        if (protogen.voltage < 3.5): # we need more than 3.3 to actually run the controller, so if we get this low, alert
-            hilight = 1
-            text = 0
-        else:
-            hilight = 0
-            text = 1
-        for x in range(46, 9*5+3+46):
-            for y in range(0, 10):
-                protogen.oled.pixel(x,y, hilight)
-        protogen.oled.text(str(protogen.voltage), 46, 1, text)
-        protogen.oled.text("State: ", 0, 11, 1)
-        protogen.oled.text(protogen.currentMood.name, 7*5+1, 1, 1)
-        protogen.oled.show()
-        await asyncio.sleep(.5)
+        if (protogen.voltage != oldVolt or protogen.currentMood.name != oldMood):
+            oldVolt = protogen.voltage
+            oldMood = protogen.currentMood.name
+            protogen.oled.fill(0)
+            protogen.oled.text("Battery: ", 0, 1, 1) # next line will be at y=11. volts/% at x = 9*5 + 1 = 46
+            if (protogen.voltage < 3.5): # we need more than 3.3 to actually run the controller, so if we get this low, alert
+                hilight = 1
+                text = 0
+            else:
+                hilight = 0
+                text = 1
+            for x in range(50, 9*5+3+46):
+                for y in range(0, 10):
+                    protogen.oled.pixel(x,y, hilight)
+            protogen.oled.text(str(protogen.voltage), 50, 1, text)
+            protogen.oled.text("State: ", 0, 11, 1)
+            protogen.oled.text(protogen.currentMood.name, 7*5+1, 11, 1)
+            protogen.oled.show()
+        await asyncio.sleep(.1)
 
 async def micCheck(protogen):
     while True:
         protogen.micVal = protogen.microphone.value
-        if (config.talkAnimationOnMicrophone):
+        #if (config.talkAnimationOnMicrophone):
             # TBD
-            continue
         await asyncio.sleep(.1)
 
 def rgbHelper(pos):
@@ -185,14 +189,14 @@ def rgbRainbowCycle(protogen):
 rgbVals = [255, 0, 0]
 rgbDirs = [-1, 1, 1]
 
-def rgbColorShift(pixels): #shift all pixels at once for hopefully better performance
+def rgbColorShift(protogen): #shift all pixels at once for hopefully better performance
     for i in range(0, 2, 1):
         nextVal = rgbVals[i] + rgbDirs[i]
         if ((nextVal == 0) or (nextVal == 255)):
             rgbDirs[i] = rgbDirs[i]*-1
         rgbVals[i] = nextVal
-    pixels.fill((rgbVals[0], rgbVals[1], rgbVals[2]))
-    pixels.show()
+    protogen.rgbLights.fill((rgbVals[0], rgbVals[1], rgbVals[2]))
+    protogen.rgbLights.show()
 
 
 

@@ -22,5 +22,6 @@
 7. [Hall Effect Sensor](https://www.amazon.com/gp/product/B09MSDC3GR?ie=UTF8&psc=1)
 8. [Batteries](https://www.amazon.com/gp/product/B0C4GBWZ2Y?ie=UTF8&psc=1)
 9. [Battery holder](https://www.amazon.com/gp/product/B0CLP431F2?ie=UTF8&psc=1)
+
 protoheadV2.zip contains a KiCad 7.0 archived project of the breakout board designed to work with this code stock.
 

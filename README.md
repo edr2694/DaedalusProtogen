@@ -9,6 +9,7 @@
 - Support for OLED screen for current expression and battery voltage monitoring
 - Support for Hall effect sensor expression change
 - LED strip control built in
+- Support for a remote control using the nrf module found in the parts list (and you can even roll your own, just send a number for the corresponding mood!)
 - Support for microphone adjusted animation (coming soon!)
 - AsynchIO threading for threading that doesn't take a masters in CS!
 
@@ -22,6 +23,7 @@
 7. [Hall Effect Sensor](https://www.amazon.com/gp/product/B09MSDC3GR?ie=UTF8&psc=1)
 8. [Batteries](https://www.amazon.com/gp/product/B0C4GBWZ2Y?ie=UTF8&psc=1)
 9. [Battery holder](https://www.amazon.com/gp/product/B0CLP431F2?ie=UTF8&psc=1)
+10. [NRF module](https://www.amazon.com/dp/B00LX47OCY?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1)
 
 protoheadV2.zip contains a KiCad 7.0 archived project of the breakout board designed to work with this code stock.
 

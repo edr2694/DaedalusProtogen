@@ -34,6 +34,8 @@ def init():
     global microphonePin
     global microphoneEnable
     global talkAnimationOnMicrophone
+    global nrfAddress
+    global packetID
 
 
     # hardware configuration
@@ -53,7 +55,7 @@ def init():
     # ignored if moodSwitchOnHallEffect is False
     hallEffectPin = board.A1
     # Set to True if using my BLE remote control. Link to github repo to be added when done
-    moodSwitchRemoteEnable = False # <True or False>
+    moodSwitchRemoteEnable = True # <True or False>
 
     # optional 3 led's to display state number
     stateLedPins = [board.D12, board.D11, board.D10]
@@ -106,3 +108,14 @@ def init():
     rgbStripAnimationRate = 20
     # Solid color for RGB Strip (required if solid or breathing animation) <(<redValue0-255>, <greenValue0-255>, <blueValue0-255>)>
     rgbStripSolidColor = (128,128,128)
+
+    # optional nrf module stuff, for if you want a wireless remote for your proot head
+
+    # you'll want to copy this same value into the remote's config
+    # make sure youy change the line before use, or else we'll set eachother off if at the same meetup :3
+    # format: 4 letters, 1 number, pick something unique
+    nrfAddress = [b"DAED1", b"DAED2"]
+
+    # packet identifier: again, another differentiator to deconflict on the same adresses
+    # format: 4 letters, different than the address
+    packetID = "ALUS"

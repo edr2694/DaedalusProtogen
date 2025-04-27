@@ -12,6 +12,7 @@ import neopixel
 import adafruit_ssd1306
 import busio
 import displayio
+from circuitpython_nrf24l01.rf24 import RF24
 
 def getNumMats(mat):
     return  len(mat[0])
@@ -162,6 +163,19 @@ async def micCheck(protogen):
             # TBD
         await asyncio.sleep(.1)
 
+async def remoteCheck(protogen):
+    while True:
+        print("HERE")
+        #protogen.nrf.listen = True
+        if (protogen.nrf.available()):
+            buffer = protogen.nrf.read().decode()
+            if (config.packetID in buffer):
+                protogen.goToMood(int(buffer[4]))
+            else:
+                print("error: unexpected packet id: " + str(buffer[:4]))
+        #protogen.nrf.listen = False
+        await asyncio.sleep(.1)
+
 def rgbHelper(pos):
     # Input a value 0 to 255 to get a color value.
     # Input a value 0 to 255 to get a color value.
@@ -210,6 +224,14 @@ class protogen:
         cs = digitalio.DigitalInOut(board.D24)
         if (config.moodSwitchOnHallEffect):
             protogen.magSense = analogio.AnalogIn(config.hallEffectPin)
+        if (config.moodSwitchRemoteEnable):
+            csn = digitalio.DigitalInOut(board.D4)
+            ce = digitalio.DigitalInOut(board.D13)
+            protogen.nrf = RF24(spi, csn, ce)
+            protogen.nrf.pa_level = -12 # don't need a lot of power, in theory we're going less than 5 feet
+            protogen.nrf.open_tx_pipe(config.nrfAddress[1])
+            protogen.nrf.open_rx_pipe(1, config.nrfAddress[0])
+            protogen.nrf.listen = True
         if (config.stateLedEnable):
             self.onesLed = digitalio.DigitalInOut(config.stateLedPins[0])
             self.onesLed.direction = digitalio.Direction.OUTPUT
@@ -228,6 +250,7 @@ class protogen:
             self.micVal = 0 # initial value
         self.displayedStateNum = 1
         self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
+        self.display.brightness(15)
         self.voltageSource = analogio.AnalogIn(config.battSensePin)
         self.voltage = self.voltageSource.value / 65535 * 3.3 * 2
         self.asyncList = []
@@ -276,6 +299,18 @@ class protogen:
             self.twosLed.value = self.displayedStateNum & 0b10
             self.foursLed.value = self.displayedStateNum & 0b100
     
+    def goToMood(self, number):
+        l = list(self.moods.keys())
+        if (number < len(l)):
+            self.moods[l[number]].enterMood()
+            self.displayedStateNum = number
+            if (config.stateLedEnable):
+                self.onesLed.value = self.displayedStateNum & 0b1
+                self.twosLed.value = self.displayedStateNum & 0b10
+                self.foursLed.value = self.displayedStateNum & 0b100
+        else:
+            print("error: invaliud mood number: " + str(number))
+    
     async def beginLoop(self):
         animTask = asyncio.create_task(animationCheck(self))
         self.asyncList.append(animTask)
@@ -296,6 +331,7 @@ class protogen:
         if(config.microphoneEnable):
             microphoneTask = asyncio.create_task(micCheck(self))
             self.asyncList.append(microphoneTask)
+        if(config.moodSwitchRemoteEnable):
+            remoteTask = asyncio.create_task(remoteCheck(self))
+            self.asyncList.append(remoteTask)
         results = await asyncio.gather(*self.asyncList)
-
-

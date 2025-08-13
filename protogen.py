@@ -23,7 +23,7 @@ def flipSide(mat, actualyFlip):
             retmat[i] = list(reversed(mat[i])) if actualyFlip else list(mat[i])
     return retmat
 
-def matConv(inmat, vflip, hflip):
+def matConvNormal(inmat, vflip, hflip):
     numMats = getNumMats(inmat)
     retmat = [[0 for col in range(numMats*8)] for row in range(8)]
     for row in range(8):
@@ -40,49 +40,69 @@ def matConv(inmat, vflip, hflip):
             row.reverse()
     return retmat
 
-def createFullMat(rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, flipSymetry=True):
+def matConvRGB(inmat, vflip, hflip):
+    workMat = inmat
+    numMats = getNumMats(inmat)
+    retMat = [numMats*64] # 64 ligts per matrix
+    if (vflip == True):
+        workMat.reverse()
+    if (hflip == True):
+        for row in inmat:
+            row.reverse()
+    for row in range(8):
+        for mat in range(numMats):
+            for bit in range(8):
+                if (workMat[row][mat] & (1<<(7-bit))):
+                    retMat(row)*(bit+(8*(mat))) = 1
+                else:
+                    retMat(row)*(bit+(8*(mat))) = 0
+    return retMat
+
+def createFullMat(rgbEnable=False, rightMouth, rightEye, rightNose, leftMouth=None, leftEye=None, leftNose=None, flipSymetry=True):
 
     outMat = []
     matricies = {
-            "rightMouth": matConv(rightMouth, config.vFlipRMouth, config.hFlipRMouth),
-            "rightEye": matConv(rightEye, config.vFlipREye, config.hFlipREye),
-            "rightNose": matConv(rightNose, config.vFlipRNose, config.hFlipRNose)}
+            "rightMouth": matConvNormal(rightMouth, config.vFlipRMouth, config.hFlipRMouth),
+            "rightEye": matConvNormal(rightEye, config.vFlipREye, config.hFlipREye),
+            "rightNose": matConvNormal(rightNose, config.vFlipRNose, config.hFlipRNose)}
 
     if (leftMouth != None):
-        matricies.update({"leftMouth": matConv(leftMouth, config.vFlipLMouth, config.hFlipLMouth)})
+        matricies.update({"leftMouth": matConvNormal(leftMouth, config.vFlipLMouth, config.hFlipLMouth)})
     else:
-        matricies.update({"leftMouth": flipSide(matConv(rightMouth, config.vFlipLMouth, config.hFlipLMouth), flipSymetry)})
+        matricies.update({"leftMouth": flipSide(matConvNormal(rightMouth, config.vFlipLMouth, config.hFlipLMouth), flipSymetry)})
     if (leftEye != None):
-        matricies.update({"leftEye" : matConv(leftEye, config.vFlipLEye, config.hFlipLEye)})
+        matricies.update({"leftEye" : matConvNormal(leftEye, config.vFlipLEye, config.hFlipLEye)})
     else:
-        matricies.update({"leftEye" : flipSide(matConv(rightEye, config.vFlipLEye, config.hFlipLEye), flipSymetry)})
+        matricies.update({"leftEye" : flipSide(matConvNormal(rightEye, config.vFlipLEye, config.hFlipLEye), flipSymetry)})
     if (leftNose != None):
-        matricies.update({"leftNose" : matConv(leftNose, config.vFlipLNose, config.hFlipLNose)})
+        matricies.update({"leftNose" : matConvNormal(leftNose, config.vFlipLNose, config.hFlipLNose)})
     else:
-        matricies.update({"leftNose" : flipSide(matConv(rightNose, config.vFlipLNose, config.hFlipLNose), flipSymetry)})
+        matricies.update({"leftNose" : flipSide(matConvNormal(rightNose, config.vFlipLNose, config.hFlipLNose), flipSymetry)})
 
     sortedMats = []
     for i in config.matOrder:
         sortedMats.append(matricies[i])
-    
-    for row in range(8):
-        outMat.append([])
-    for i in sortedMats:
+    if (rgbEnable == False):
         for row in range(8):
-            outMat[row]+=i[row]
+            outMat.append([])
+        for i in sortedMats:
+            for row in range(8):
+                outMat[row]+=i[row]
+    else:
+        for i in sortedMats:
+            outMat = outMat+i
     return outMat
 
-def smartUpdate(protogen, newMat):
-    startTime = time.monotonic()
+def smartUpdateStandard(protogen, newMat):
     for row in range(8):
         for col in range(14*8):
             if protogen.currentDisplayed[row][col] != newMat[row][col]:
                 protogen.display.pixel(col,row, newMat[row][col])
                 protogen.currentDisplayed[row][col] = newMat[row][col]
     protogen.display.show()
-    
 
-def smartFill(protogen, onOff):
+
+def smartFillStandard(protogen, onOff):
     for row in range(8):
         for col in range(14*8):
             checkval = 1 if onOff==True else 0
@@ -90,6 +110,31 @@ def smartFill(protogen, onOff):
                 protogen.display.pixel(col,row, checkval)
                 protogen.currentDisplayed[row][col] = checkval
     protogen.display.show()
+
+def smartUpdateRGB(protogen, newMat):
+    for i in range(len(newMat)):
+        if (newMat[i] == 1):
+            protogen.faceStrip[i] = (255,255,255)
+        else:
+            protogen.faceStrip[i] = (0,0,0)
+    protogen.faceStrip.show()
+    protogen.currentDisplayed = newMat
+    
+def smartFillRGB(protogen, onOff):
+    for i in range(len(protogen.currentDisplayed)):
+        if (onOff == True):
+            protogen.faceStrip[i] = (255,255,255)
+            protogen.currentDisplayed[i] = 1
+        else:
+            protogen.faceStrip[i] = (0,0,0)
+            protogen.currentDisplayed[i] = 0
+
+
+def smartUpdate(protogen, newMat):
+    if (protogen.rgbMatrix == False):
+        smartUpdateStandard(protogen, newMat)
+    else:
+        smartUpdateRGB(protogen, newMat)
 
 async def buttonCheck(protogen):
     with keypad.Keys(
@@ -249,12 +294,19 @@ class protogen:
             self.microphone = analogio.AnalogIn(config.microphonePin)
             self.micVal = 0 # initial value
         self.displayedStateNum = 1
-        self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
-        self.display.brightness(15)
+        if (config.rgbMatrix):
+            self.rgbMatrix = True
+            self.faceStrip = neopixel.NeoPixel(config.rgbMatPin, 64*14, auto_write=False, brightness=.1)
+            self.currentDisplayed = [64*14]
+        else:
+            self.rgbMatrix = False
+            self.display = matrices.CustomMatrix(spi, cs, 14*8, 8, rotation=1)
+            self.display.brightness(15)
+            self.currentDisplayed = [[0 for col in range(14*8)] for row in range(8)]
         self.voltageSource = analogio.AnalogIn(config.battSensePin)
         self.voltage = self.voltageSource.value / 65535 * 3.3 * 2
         self.asyncList = []
-        self.currentDisplayed = [[0 for col in range(14*8)] for row in range(8)]
+        
         self.matInfo = {"leftEye": {"numPanels": 2, "offset": -1},
                         "leftMouth": {"numPanels": 4, "offset": -1},
                         "leftNose": {"numPanels": 1, "offset": -1},

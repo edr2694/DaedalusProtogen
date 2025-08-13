@@ -36,10 +36,15 @@ def init():
     global talkAnimationOnMicrophone
     global nrfAddress
     global packetID
+    global rgbMatrix
+    global rgbMatPin
 
 
     # hardware configuration
 
+    # set the following to true if using those shiny new RGB matricies
+    rgbMatrix = True
+    rgbMatPin = board.D9
     # set to True if you want to have a button directly hooked up to the board to change the mood, otherwise False
     moodSwitchOnButtonPress = False # <True or False>
     # set the following to True if you wish to use a hall effect sensor
@@ -97,7 +102,7 @@ def init():
     # Set to true to enable 
     rgbStripEnable = True # <True or False>
     #Set to pin used for RGB strip control
-    rgbStripPin = board.D9
+    rgbStripPin = board.D4
     # Number of LED's on the strip <integer>
     numRGBLEDs = 50
     # Maximum brightness for the RGB strip <number between 0.0 and 1.0>
